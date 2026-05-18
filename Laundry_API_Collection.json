@@ -1,0 +1,219 @@
+{
+  "info": {
+    "name": "Laundry KIK - Full System API",
+    "description": "Koleksi API Terpadu untuk User, Kurir, Owner, dan Admin.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"User Test\",\n    \"email\": \"user@example.com\",\n    \"phone\": \"08123456789\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/register", "host": ["{{base_url}}"], "path": ["register"] }
+          }
+        },
+        {
+          "name": "Register Courier",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Kurir Test\",\n    \"email\": \"kurir@example.com\",\n    \"phone\": \"082233445566\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\",\n    \"ktp_image\": \"ktp.jpg\",\n    \"surat_desa\": \"surat.pdf\",\n    \"skck\": \"skck.pdf\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/register/courier", "host": ["{{base_url}}"], "path": ["register", "courier"] }
+          }
+        },
+        {
+          "name": "Register Owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Owner Test\",\n    \"email\": \"owner@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\",\n    \"laundry_name\": \"KIK Laundry Express\",\n    \"laundry_address\": \"Jl. Merdeka No. 1\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/register/owner", "host": ["{{base_url}}"], "path": ["register", "owner"] }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"admin@laundry.com\",\n    \"password\": \"admin123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Admin Management",
+      "item": [
+        {
+          "name": "Get Laundries",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/laundries", "host": ["{{base_url}}"], "path": ["admin", "laundries"] }
+          }
+        },
+        {
+          "name": "Approve Owner",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/admin/laundries/1/approve", "host": ["{{base_url}}"], "path": ["admin", "laundries", "1", "approve"] }
+          }
+        },
+        {
+          "name": "Approve Courier",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/admin/couriers/1/approve", "host": ["{{base_url}}"], "path": ["admin", "couriers", "1", "approve"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Order & Flow (User -> Courier -> Owner)",
+      "item": [
+        {
+          "name": "Step 1: Create Order (User)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"owner_id\": 1,\n    \"service_id\": 1,\n    \"laundry_location\": \"Rumah User No. 10\",\n    \"delivery_type\": \"standart\",\n    \"pickup_type\": \"pickup\",\n    \"payment_method\": \"tunai\",\n    \"items\": [{ \"service_name\": \"Kaos\", \"price\": 0, \"qty\": 2 }]\n}"
+            },
+            "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "Step 2: Assign (Courier)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\"order_id\": 1}" },
+            "url": { "raw": "{{base_url}}/courier/assign", "host": ["{{base_url}}"], "path": ["courier", "assign"] }
+          }
+        },
+        {
+          "name": "Step 3: Update to Weighing (Courier)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\"order_id\": 1, \"status\": \"weighing\"}" },
+            "url": { "raw": "{{base_url}}/courier/step", "host": ["{{base_url}}"], "path": ["courier", "step"] }
+          }
+        },
+        {
+          "name": "Step 4: Input Weight (Courier)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\"order_id\": 1, \"weight\": 2.5, \"price_per_kg\": 10000}" },
+            "url": { "raw": "{{base_url}}/courier/weight", "host": ["{{base_url}}"], "path": ["courier", "weight"] }
+          }
+        },
+        {
+          "name": "Step 5: Receive at Shop (Owner)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/owner/orders/1/receive", "host": ["{{base_url}}"], "path": ["owner", "orders", "1", "receive"] }
+          }
+        },
+        {
+          "name": "Step 6: Update to Process (Owner)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\"status\": \"process\"}" },
+            "url": { "raw": "{{base_url}}/owner/orders/1/status", "host": ["{{base_url}}"], "path": ["owner", "orders", "1", "status"] }
+          }
+        },
+        {
+          "name": "Step 7: Update to Done (Owner)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\"status\": \"done\"}" },
+            "url": { "raw": "{{base_url}}/owner/orders/1/status", "host": ["{{base_url}}"], "path": ["owner", "orders", "1", "status"] }
+          }
+        },
+        {
+          "name": "Step 8: Delivery Back (Courier)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\"order_id\": 1, \"status\": \"delivery_back\"}" },
+            "url": { "raw": "{{base_url}}/courier/delivery-back", "host": ["{{base_url}}"], "path": ["courier", "delivery-back"] }
+          }
+        },
+        {
+          "name": "Step 9: Completed (Courier)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\"order_id\": 1, \"status\": \"completed\"}" },
+            "url": { "raw": "{{base_url}}/courier/delivery-back", "host": ["{{base_url}}"], "path": ["courier", "delivery-back"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Reviews",
+      "item": [
+        {
+          "name": "Post Review",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }] },
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"order_id\": 1,\n    \"rating\": 5,\n    \"comment\": \"Sangat memuaskan!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/reviews", "host": ["{{base_url}}"], "path": ["reviews"] }
+          }
+        },
+        {
+          "name": "Get Shop Reviews",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/reviews/1", "host": ["{{base_url}}"], "path": ["reviews", "1"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api", "type": "string" },
+    { "key": "auth_token", "value": "ISI_TOKEN_DISINI", "type": "string" }
+  ]
+}
