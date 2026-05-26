@@ -15,13 +15,26 @@ class CourierController extends Controller
     {
         $courierId = Auth::id();
 
-        // Pesanan pending (belum diambil siapapun) + pesanan yang diambil kurir ini
         $orders = Order::with(['service', 'user'])
             ->where(function ($q) use ($courierId) {
-                $q->where('status', 'pending') // Available
-                  ->orWhereHas('courierTask', function ($q2) use ($courierId) {
-                      $q2->where('courier_id', $courierId);
-                  });
+                // Available for Pickup
+                $q->where(function ($q1) {
+                    $q1->where('status', 'pending')
+                       ->where('pickup_type', 'pickup')
+                       ->doesntHave('courierTask');
+                })
+                // Available for Delivery
+                ->orWhere(function ($q2) {
+                    $q2->where('status', 'done')
+                       ->where('return_method', 'delivery')
+                       ->whereDoesntHave('courierTask', function($qt) {
+                           $qt->whereIn('status', ['delivery_back', 'shipped', 'completed']);
+                       });
+                })
+                // Active tasks assigned to this courier
+                ->orWhereHas('courierTask', function ($q3) use ($courierId) {
+                    $q3->where('courier_id', $courierId);
+                });
             })
             ->orderByDesc('created_at')
             ->get();
@@ -36,19 +49,34 @@ class CourierController extends Controller
         $request->validate(['order_id' => 'required|exists:orders,id']);
         
         $order = Order::findOrFail($request->order_id);
-        $order->update(['status' => 'pickup']);
+        
+        if ($order->status === 'pending' && $order->pickup_type === 'pickup') {
+            $order->update(['status' => 'pickup']);
+            $task = CourierTask::create([
+                'order_id' => $order->id,
+                'courier_id' => Auth::id(),
+                'status' => 'pickup'
+            ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Order berhasil diambil untuk pickup',
+                'data' => $task
+            ]);
+        } elseif ($order->status === 'done' && $order->return_method === 'delivery') {
+            $order->update(['status' => 'delivery_back']);
+            $task = CourierTask::create([
+                'order_id' => $order->id,
+                'courier_id' => Auth::id(),
+                'status' => 'delivery_back'
+            ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Order berhasil diambil untuk pengantaran balik',
+                'data' => $task
+            ]);
+        }
 
-        $task = CourierTask::create([
-            'order_id' => $order->id,
-            'courier_id' => Auth::id(),
-            'status' => 'pickup'
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order berhasil diambil, silakan menuju lokasi user',
-            'data' => $task
-        ]);
+        return response()->json(['success' => false, 'message' => 'Order tidak tersedia'], 400);
     }
 
     // 2. Update Status Perjalanan (pickup -> weighing -> to_laundry)
@@ -111,11 +139,16 @@ class CourierController extends Controller
     {
         $request->validate([
             'order_id' => 'required|exists:orders,id',
-            'status' => 'required|in:delivery_back,shipped,completed'
+            'status' => 'required|in:shipped,completed'
         ]);
 
         $order = Order::query()->where('id', $request->order_id)->firstOrFail();
         $order->update(['status' => $request->status]);
+
+        $task = CourierTask::where('order_id', $order->id)->where('courier_id', Auth::id())->orderBy('id', 'desc')->first();
+        if ($task) {
+            $task->update(['status' => $request->status]);
+        }
 
         if ($request->status === 'completed' && $order->user && !$order->points_granted) {
             $pointsEarned = floor($order->total_price / 1000); // 1 point per 1000 IDR

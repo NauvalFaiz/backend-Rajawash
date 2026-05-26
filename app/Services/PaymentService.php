@@ -53,7 +53,6 @@ class PaymentService
         // Process success
         $this->orderRepository->updatePaymentStatus($order, [
             'payment_status' => 'paid',
-            'status' => 'paid',
             'paid_at' => Carbon::now(),
             'payment_device_info' => $metadata['device_info'] ?? null,
             'payment_ip_address' => $metadata['ip_address'] ?? null,

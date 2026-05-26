@@ -12,6 +12,7 @@ class Order extends Model
         'service_id',
         'laundry_location',
         'delivery_type',
+        'return_method',
         'pickup_type',
         'payment_method',
         'payment_code',

@@ -29,7 +29,7 @@ class OwnerController extends Controller
     // 2. Update Status Laundry (received -> process -> done)
     public function updateOrderStatus(Request $request, $id)
     {
-        $request->validate(['status' => 'required|in:process,done']);
+        $request->validate(['status' => 'required|in:process,done,completed']);
         
         $order = Order::query()->where('owner_id', Auth::id())->findOrFail($id);
         $order->update(['status' => $request->status]);
@@ -50,8 +50,7 @@ class OwnerController extends Controller
         $order = Order::findOrFail($id);
 
         $order->update([
-            'payment_status' => 'paid',
-            'status' => 'paid'
+            'payment_status' => 'paid'
         ]);
 
         $this->grantPoints($order);

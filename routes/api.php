@@ -11,6 +11,7 @@ use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +61,12 @@ Route::prefix('mobile')->group(function () {
         Route::get('/user', [ProfileController::class, 'profile']);
         Route::put('/user', [ProfileController::class, 'update']);
 
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/fcm-token', [NotificationController::class, 'updateFcmToken']);
+
         // Voucher, Promo, Membership
         Route::get('/promos', [VoucherPromoController::class, 'promos']);
         Route::post('/voucher/validate', [VoucherPromoController::class, 'validateVoucher']);
@@ -99,6 +106,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [ProfileController::class, 'profile']);
     Route::put('/user', [ProfileController::class, 'update']);
+
+    // Notifications Web
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::post('/fcm-token', [NotificationController::class, 'updateFcmToken']);
 
     // Orders (shared)
     Route::post('/orders', [OrderController::class, 'createOrder']);
